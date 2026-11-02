@@ -1,0 +1,19 @@
+{
+  "name": "drevantix",
+  "private": true,
+  "description": "Drevantix – vehicle tracking platform, customer portal and company website",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c cyan,blue \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "typecheck": "npm --prefix server run typecheck && npm --prefix client exec tsc -b",
+    "reset-db": "rm -rf server/data"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
