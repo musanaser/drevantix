@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../lib/auth'
 import { FleetProvider, useFleet } from '../../lib/fleet'
-import { ALERT_LABEL } from '../../lib/format'
+import { alertLabel, alertMessage } from '../../lib/format'
+import { useI18n } from '../../lib/i18n'
+import { LangToggle } from '../LangToggle'
 import { Logo } from '../Logo'
 import { Spinner } from '../ui'
 
@@ -24,24 +26,25 @@ export function RequireAuth() {
 function PortalShell() {
   const { user, logout } = useAuth()
   const { openAlerts, connected, companies, companyId, setCompanyId } = useFleet()
+  const { t } = useI18n()
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   useEffect(() => setMobileOpen(false), [location.pathname])
 
   const nav = [
-    { to: '/portal', label: 'Dashboard', icon: LayoutDashboard, end: true },
-    { to: '/portal/live', label: 'Live Map', icon: Map },
-    { to: '/portal/vehicles', label: 'Vehicles', icon: Car },
-    { to: '/portal/trips', label: 'Trips', icon: Route },
-    { to: '/portal/alerts', label: 'Alerts', icon: Bell, badge: openAlerts },
-    { to: '/portal/geofences', label: 'Geofences', icon: Shapes },
-    { to: '/portal/drivers', label: 'Drivers', icon: Users },
-    { to: '/portal/reports', label: 'Reports', icon: BarChart3 },
-    { to: '/portal/settings', label: 'Settings', icon: Settings },
+    { to: '/portal', label: t('Dashboard', 'لوحة التحكم'), icon: LayoutDashboard, end: true },
+    { to: '/portal/live', label: t('Live Map', 'الخريطة المباشرة'), icon: Map },
+    { to: '/portal/vehicles', label: t('Vehicles', 'المركبات'), icon: Car },
+    { to: '/portal/trips', label: t('Trips', 'الرحلات'), icon: Route },
+    { to: '/portal/alerts', label: t('Alerts', 'التنبيهات'), icon: Bell, badge: openAlerts },
+    { to: '/portal/geofences', label: t('Geofences', 'المناطق الجغرافية'), icon: Shapes },
+    { to: '/portal/drivers', label: t('Drivers', 'السائقون'), icon: Users },
+    { to: '/portal/reports', label: t('Reports', 'التقارير'), icon: BarChart3 },
+    { to: '/portal/settings', label: t('Settings', 'الإعدادات'), icon: Settings },
   ]
   const adminNav = [
-    { to: '/portal/admin/customers', label: 'Customers', icon: Building2 },
-    { to: '/portal/admin/leads', label: 'Leads & Demos', icon: Inbox },
+    { to: '/portal/admin/customers', label: t('Customers', 'العملاء'), icon: Building2 },
+    { to: '/portal/admin/leads', label: t('Leads & Demos', 'الطلبات والعروض'), icon: Inbox },
   ]
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -64,7 +67,7 @@ function PortalShell() {
         ))}
         {user?.role === 'admin' && (
           <>
-            <p className="px-3 pt-6 pb-2 text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Platform admin</p>
+            <p className="px-3 pt-6 pb-2 text-[10px] font-semibold tracking-widest text-slate-500 uppercase">{t('Platform admin', 'إدارة المنصة')}</p>
             {adminNav.map((n) => (
               <NavLink key={n.to} to={n.to} className={linkCls}>
                 <n.icon className="h-[18px] w-[18px]" />
@@ -81,10 +84,10 @@ function PortalShell() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{user?.name}</p>
-            <p className="truncate text-xs text-slate-400 capitalize">{user?.role === 'admin' ? 'Drevantix admin' : `${user?.role} · ${user?.company?.name}`}</p>
+            <p className="truncate text-xs text-slate-400 capitalize">{user?.role === 'admin' ? t('Drevantix admin', 'مدير دريفانتكس') : `${user?.role === 'manager' ? t('manager', 'مدير') : t('viewer', 'مشاهد')} · ${user?.company?.name}`}</p>
           </div>
-          <button onClick={logout} className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out">
-            <LogOut className="h-4 w-4" />
+          <button onClick={logout} className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white" title={t('Sign out', 'تسجيل الخروج')} aria-label={t('Sign out', 'تسجيل الخروج')}>
+            <LogOut className="h-4 w-4 rtl:rotate-180" />
           </button>
         </div>
       </div>
@@ -98,7 +101,7 @@ function PortalShell() {
         <div className="fixed inset-0 z-[1500] lg:hidden">
           <div className="absolute inset-0 bg-navy-950/60" onClick={() => setMobileOpen(false)} />
           <div className="relative h-full w-64">{sidebar}</div>
-          <button className="absolute top-4 left-68 rounded-lg bg-white/10 p-2 text-white" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+          <button className="absolute top-4 start-68 rounded-lg bg-white/10 p-2 text-white" onClick={() => setMobileOpen(false)} aria-label="Close menu">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -113,29 +116,30 @@ function PortalShell() {
               <select
                 value={companyId ?? ''}
                 onChange={(e) => setCompanyId(e.target.value ? Number(e.target.value) : null)}
-                className="appearance-none rounded-lg border-0 bg-slate-100 py-2 pr-9 pl-3 text-sm font-medium text-navy-900 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                aria-label="Customer scope"
+                className="appearance-none rounded-lg border-0 bg-slate-100 py-2 pe-9 ps-3 text-sm font-medium text-navy-900 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                aria-label={t('Customer scope', 'نطاق العميل')}
               >
-                <option value="">All customers</option>
+                <option value="">{t('All customers', 'جميع العملاء')}</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute top-2.5 right-3 h-4 w-4 text-slate-500" />
+              <ChevronDown className="pointer-events-none absolute top-2.5 end-3 h-4 w-4 text-slate-500" />
             </div>
           ) : (
             <p className="truncate font-display text-sm font-semibold text-navy-900">{user?.company?.name}</p>
           )}
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ms-auto flex items-center gap-3 sm:gap-4">
+            <LangToggle />
             <span className={`hidden items-center gap-2 text-xs font-medium sm:flex ${connected ? 'text-emerald-600' : 'text-slate-400'}`}>
               <span className={`h-2 w-2 rounded-full ${connected ? 'animate-pulse bg-emerald-500' : 'bg-slate-300'}`} />
-              {connected ? 'Live' : 'Connecting…'}
+              {connected ? t('Live', 'مباشر') : t('Connecting…', 'جارٍ الاتصال…')}
             </span>
-            <Link to="/portal/alerts" className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label="Alerts">
+            <Link to="/portal/alerts" className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label={t('Alerts', 'التنبيهات')}>
               <Bell className="h-5 w-5" />
-              {openAlerts > 0 && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />}
+              {openAlerts > 0 && <span className="absolute top-1 end-1 h-2 w-2 rounded-full bg-red-500" />}
             </Link>
           </div>
         </header>
@@ -150,19 +154,20 @@ function PortalShell() {
 
 function AlertToasts() {
   const { liveAlerts, dismissAlert } = useFleet()
+  useI18n()
   useEffect(() => {
     if (!liveAlerts.length) return
     const t = setTimeout(() => dismissAlert(liveAlerts[liveAlerts.length - 1].id), 7000)
     return () => clearTimeout(t)
   }, [liveAlerts, dismissAlert])
   return (
-    <div className="pointer-events-none fixed right-4 bottom-4 z-[1800] flex w-80 flex-col gap-2">
+    <div className="pointer-events-none fixed end-4 bottom-4 z-[1800] flex w-80 flex-col gap-2">
       {liveAlerts.map((a) => (
         <div key={a.id} className="pointer-events-auto flex gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
           <AlertTriangle className={`h-5 w-5 shrink-0 ${a.severity === 'critical' ? 'text-red-500' : 'text-amber-500'}`} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-900">{ALERT_LABEL[a.type]}</p>
-            <p className="text-xs text-slate-600">{a.message}</p>
+            <p className="text-xs font-semibold text-slate-900">{alertLabel(a.type)}</p>
+            <p className="text-xs text-slate-600">{alertMessage(a)}</p>
           </div>
           <button onClick={() => dismissAlert(a.id)} className="self-start text-slate-400 hover:text-slate-600" aria-label="Dismiss">
             <X className="h-4 w-4" />

@@ -1,7 +1,7 @@
 import L from 'leaflet'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Circle, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
-import { STATUS_META } from '../../lib/format'
+import { STATUS_META, place } from '../../lib/format'
 import type { Geofence, Vehicle } from '../../lib/types'
 
 export const RIYADH: [number, number] = [24.7136, 46.6753]
@@ -89,7 +89,7 @@ export function GeofenceLayer({ geofences, onSelect }: { geofences: Geofence[]; 
           pathOptions={{ color: g.color, fillColor: g.color, fillOpacity: 0.12, weight: 2, dashArray: '6 4' }}
           eventHandlers={onSelect ? { click: () => onSelect(g) } : undefined}
         >
-          <Tooltip direction="top">{g.name}</Tooltip>
+          <Tooltip direction="top">{place(g.name)}</Tooltip>
         </Circle>
       ))}
     </>

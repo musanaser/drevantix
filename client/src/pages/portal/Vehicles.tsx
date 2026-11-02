@@ -6,20 +6,22 @@ import { Button, Card, EmptyState, ErrorText, Field, Input, Modal, PageHeader, S
 import { api } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { useFleet } from '../../lib/fleet'
-import { timeAgo } from '../../lib/format'
+import { fmtKm, fmtSpeed, timeAgo } from '../../lib/format'
+import { useI18n } from '../../lib/i18n'
 import type { Driver, Vehicle } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 
 export default function Vehicles() {
   const { user } = useAuth()
   const { vehicles, loading, refresh, companyId } = useFleet()
+  const { t } = useI18n()
   const canEdit = user?.role !== 'viewer'
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Partial<Vehicle> | null>(null)
   const list = vehicles.filter((v) => `${v.name} ${v.plate} ${v.driver_name ?? ''} ${v.make ?? ''}`.toLowerCase().includes(query.toLowerCase()))
 
   async function remove(v: Vehicle) {
-    if (!confirm(`Delete ${v.name}? Its history will be removed.`)) return
+    if (!confirm(t(`Delete ${v.name}? Its history will be removed.`, `حذف ${v.name}؟ سيتم حذف سجلها بالكامل.`))) return
     await api(`/vehicles/${v.id}`, { method: 'DELETE' })
     refresh()
   }
@@ -27,12 +29,12 @@ export default function Vehicles() {
   return (
     <PageBody>
       <PageHeader
-        title="Vehicles"
-        subtitle={`${vehicles.length} vehicles in your fleet`}
+        title={t('Vehicles', 'المركبات')}
+        subtitle={t(`${vehicles.length} vehicles in your fleet`, `${vehicles.length} مركبة في أسطولك`)}
         actions={
           canEdit && (
-            <Button onClick={() => setEditing({ type: 'truck', speed_limit: 90 })} disabled={user?.role === 'admin' && !companyId} title={user?.role === 'admin' && !companyId ? 'Select a customer first' : undefined}>
-              <Plus className="h-4 w-4" /> Add vehicle
+            <Button onClick={() => setEditing({ type: 'truck', speed_limit: 90 })} disabled={user?.role === 'admin' && !companyId} title={user?.role === 'admin' && !companyId ? t('Select a customer first', 'اختر عميلاً أولاً') : undefined}>
+              <Plus className="h-4 w-4" /> {t('Add vehicle', 'إضافة مركبة')}
             </Button>
           )
         }
@@ -40,27 +42,27 @@ export default function Vehicles() {
       <Card>
         <div className="border-b border-slate-100 p-4">
           <div className="relative max-w-sm">
-            <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search vehicles" className="pl-9" />
+            <Search className="pointer-events-none absolute top-2.5 start-3 h-4 w-4 text-slate-400" />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('Search vehicles', 'ابحث في المركبات')} className="ps-9" />
           </div>
         </div>
         {loading ? (
           <Spinner />
         ) : !list.length ? (
-          <EmptyState icon={<Car className="h-5 w-5" />} title="No vehicles found" />
+          <EmptyState icon={<Car className="h-5 w-5" />} title={t('No vehicles found', 'لا توجد مركبات')} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-start text-sm">
               <thead className="bg-slate-50 text-xs font-medium text-slate-500 uppercase">
                 <tr>
-                  <th className="px-4 py-3">Vehicle</th>
-                  {user?.role === 'admin' && <th className="px-4 py-3">Customer</th>}
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Driver</th>
-                  <th className="px-4 py-3">Speed</th>
-                  <th className="px-4 py-3">Fuel</th>
-                  <th className="px-4 py-3">Odometer</th>
-                  <th className="px-4 py-3">Last update</th>
+                  <th className="px-4 py-3">{t('Vehicle', 'المركبة')}</th>
+                  {user?.role === 'admin' && <th className="px-4 py-3">{t('Customer', 'العميل')}</th>}
+                  <th className="px-4 py-3">{t('Status', 'الحالة')}</th>
+                  <th className="px-4 py-3">{t('Driver', 'السائق')}</th>
+                  <th className="px-4 py-3">{t('Speed', 'السرعة')}</th>
+                  <th className="px-4 py-3">{t('Fuel', 'الوقود')}</th>
+                  <th className="px-4 py-3">{t('Odometer', 'العداد')}</th>
+                  <th className="px-4 py-3">{t('Last update', 'آخر تحديث')}</th>
                   {canEdit && <th className="px-4 py-3" />}
                 </tr>
               </thead>
@@ -78,7 +80,7 @@ export default function Vehicles() {
                     {user?.role === 'admin' && <td className="px-4 py-3 text-slate-600">{v.company_name}</td>}
                     <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
                     <td className="px-4 py-3 text-slate-600">{v.driver_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{Math.round(v.speed)} km/h</td>
+                    <td className="px-4 py-3 text-slate-600">{fmtSpeed(v.speed)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
@@ -87,13 +89,13 @@ export default function Vehicles() {
                         <span className="text-xs text-slate-500">{Math.round(v.fuel_pct)}%</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{Math.round(v.odometer_km).toLocaleString()} km</td>
+                    <td className="px-4 py-3 text-slate-600">{fmtKm(Math.round(v.odometer_km))}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{timeAgo(v.last_update)}</td>
                     {canEdit && (
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1">
-                          <button onClick={() => setEditing(v)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-navy-800" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
-                          <button onClick={() => remove(v)} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+                          <button onClick={() => setEditing(v)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-navy-800" aria-label={t('Edit', 'تعديل')}><Pencil className="h-4 w-4" /></button>
+                          <button onClick={() => remove(v)} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label={t('Delete', 'حذف')}><Trash2 className="h-4 w-4" /></button>
                         </div>
                       </td>
                     )}
@@ -122,6 +124,7 @@ function VehicleForm({ vehicle, onClose, onSaved }: { vehicle: Partial<Vehicle>;
     driver_id: vehicle.driver_id ? String(vehicle.driver_id) : '',
     route_id: vehicle.route_id ? String(vehicle.route_id) : '',
   })
+  const { t } = useI18n()
   const drivers = useApi<Driver[]>('/drivers', vehicle.company_id ? { companyId: vehicle.company_id } : undefined)
   const routes = useApi<{ id: number; name: string }[]>('/routes')
   const [error, setError] = useState<string | null>(null)
@@ -151,39 +154,39 @@ function VehicleForm({ vehicle, onClose, onSaved }: { vehicle: Partial<Vehicle>;
   }
 
   return (
-    <Modal open onClose={onClose} title={vehicle.id ? `Edit ${vehicle.name}` : 'Add vehicle'}>
+    <Modal open onClose={onClose} title={vehicle.id ? t(`Edit ${vehicle.name}`, `تعديل ${vehicle.name}`) : t('Add vehicle', 'إضافة مركبة')}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name *"><Input required value={form.name} onChange={set('name')} placeholder="Truck 09" /></Field>
-        <Field label="Plate number *"><Input required value={form.plate} onChange={set('plate')} placeholder="ABC 1234" /></Field>
-        <Field label="Type">
+        <Field label={t('Name *', 'الاسم *')}><Input required value={form.name} onChange={set('name')} placeholder="Truck 09" /></Field>
+        <Field label={t('Plate number *', 'رقم اللوحة *')}><Input required value={form.plate} onChange={set('plate')} placeholder="ABC 1234" /></Field>
+        <Field label={t('Type', 'النوع')}>
           <Select value={form.type} onChange={set('type')}>
-            <option value="truck">Truck</option>
-            <option value="van">Van</option>
-            <option value="car">Car</option>
-            <option value="bus">Bus</option>
+            <option value="truck">{t('Truck', 'شاحنة')}</option>
+            <option value="van">{t('Van', 'فان')}</option>
+            <option value="car">{t('Car', 'سيارة')}</option>
+            <option value="bus">{t('Bus', 'حافلة')}</option>
           </Select>
         </Field>
-        <Field label="Speed limit (km/h)"><Input type="number" min={20} max={200} value={form.speed_limit} onChange={set('speed_limit')} /></Field>
-        <Field label="Make"><Input value={form.make} onChange={set('make')} /></Field>
-        <Field label="Model"><Input value={form.model} onChange={set('model')} /></Field>
-        <Field label="Year"><Input type="number" value={form.year} onChange={set('year')} /></Field>
-        <Field label="Device IMEI"><Input value={form.device_imei} onChange={set('device_imei')} /></Field>
-        <Field label="Assigned driver">
+        <Field label={t('Speed limit (km/h)', 'حد السرعة (كم/س)')}><Input type="number" min={20} max={200} value={form.speed_limit} onChange={set('speed_limit')} /></Field>
+        <Field label={t('Make', 'الشركة المصنعة')}><Input value={form.make} onChange={set('make')} /></Field>
+        <Field label={t('Model', 'الطراز')}><Input value={form.model} onChange={set('model')} /></Field>
+        <Field label={t('Year', 'سنة الصنع')}><Input type="number" value={form.year} onChange={set('year')} /></Field>
+        <Field label={t('Device IMEI', 'رقم IMEI للجهاز')}><Input value={form.device_imei} onChange={set('device_imei')} /></Field>
+        <Field label={t('Assigned driver', 'السائق المعيّن')}>
           <Select value={form.driver_id} onChange={set('driver_id')}>
-            <option value="">— None —</option>
+            <option value="">{t('— None —', '— لا يوجد —')}</option>
             {drivers.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </Select>
         </Field>
-        <Field label="Demo route (simulated GPS)" hint="Real devices report their own position.">
+        <Field label={t('Demo route (simulated GPS)', 'مسار تجريبي (GPS محاكى)')} hint={t('Real devices report their own position.', 'الأجهزة الحقيقية ترسل موقعها تلقائياً.')}>
           <Select value={form.route_id} onChange={set('route_id')}>
-            <option value="">— No simulation —</option>
+            <option value="">{t('— No simulation —', '— بدون محاكاة —')}</option>
             {routes.data?.map((r) => <option key={r.id} value={r.id}>{r.id}. {r.name}</option>)}
           </Select>
         </Field>
         <div className="sm:col-span-2"><ErrorText error={error} /></div>
         <div className="flex justify-end gap-2 sm:col-span-2">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" loading={saving}>{vehicle.id ? 'Save changes' : 'Add vehicle'}</Button>
+          <Button type="button" variant="secondary" onClick={onClose}>{t('Cancel', 'إلغاء')}</Button>
+          <Button type="submit" loading={saving}>{vehicle.id ? t('Save changes', 'حفظ التغييرات') : t('Add vehicle', 'إضافة مركبة')}</Button>
         </div>
       </form>
     </Modal>

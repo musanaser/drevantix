@@ -24,7 +24,7 @@ export function PageHero({ eyebrow, title, text }: { eyebrow: string; title: str
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-navy-700">
       <div className="grid-glow absolute inset-0" />
-      <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
+      <div className="absolute -end-24 -top-24 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <p className="text-xs font-medium tracking-[0.25em] text-cyan-300 uppercase">{eyebrow}</p>
         <h1 className="mt-3 max-w-3xl text-4xl font-bold text-white md:text-5xl">{title}</h1>
